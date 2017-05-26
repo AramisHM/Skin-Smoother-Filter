@@ -84,7 +84,7 @@ void bilateralFilter(ahm_bitmap *source, ahm_bitmap *filtered, int diameter, dou
             applyBilateralFilter(source, filtered, i, j, diameter, sigmaI, sigmaS);
 
 		}
-#ifdef WIN32
+#ifdef _WIN32
 			system("cls");
 			printf("Progress: %d/%d (%d%%)", i, width, (unsigned int)((float)((float)i/(float)width)*100.0f));
 #endif

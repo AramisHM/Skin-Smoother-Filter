@@ -1,7 +1,6 @@
 /* Aramis' Bitmap Lib - Copyright (c) 2017 Aramis Hornung Moraes */
 
-
-#define AHMBMP_VERSION "0.9.5"
+#define AHMBMP_VERSION "0.9.6"
 
 #include <stdio.h>
 #include "ahmbmp.h"
@@ -9,6 +8,7 @@
 #include "ahmlux.h"
 #include "ahmskin.h"
 #include "ahmfilters.h"
+#include "string.h"
 
 /* debug stuff for MSVC */
 #ifdef WIN32
@@ -26,18 +26,26 @@ void main_process_image(char *file_path)
 {
     ahm_bitmap *myBmp;
 	ahm_bitmap *ycbcr;
+	ahm_bitmap *ycbcr_y;
+	ahm_bitmap *ycbcr_cb;
+	ahm_bitmap *ycbcr_cr;
 	ahm_bitmap *lux;
+	ahm_bitmap *lux_l;
+	ahm_bitmap *lux_u;
+	ahm_bitmap *lux_x;
 	ahm_bitmap *skinMap;
 	ahm_bitmap *uChannel;
 	ahm_bitmap *experimentalskin;
 	ahm_bitmap *filtered;
-    char file_output_name[4096];
-
+	char *input_file_name;
+	char file_output_name[4096];
+	
+	/* iterators */
 	unsigned int i = 0;
-	unsigned int j = 0; /* iterator */
+	unsigned int j = 0; 
 
     myBmp = create_bmp_from_file(file_path);
-
+	input_file_name = strtok(file_path, ".");
     if(myBmp == 0)
     {
         destroy_ahmBitmap(myBmp);
@@ -45,17 +53,26 @@ void main_process_image(char *file_path)
 		printf("Error: File is not supported. Only 24bit bitmaps can be processed.\n");
     }
 
+	/* allocate image structures */
 	ycbcr=create_ahmBitmap(myBmp->Width,myBmp->Height);
 	lux=create_ahmBitmap(myBmp->Width,myBmp->Height);
+	lux_l = create_ahmBitmap(myBmp->Width, myBmp->Height);
+	lux_u = create_ahmBitmap(myBmp->Width, myBmp->Height);
+	lux_x = create_ahmBitmap(myBmp->Width, myBmp->Height);
+	ycbcr_y = create_ahmBitmap(myBmp->Width, myBmp->Height);
+	ycbcr_cb = create_ahmBitmap(myBmp->Width, myBmp->Height);
+	ycbcr_cr = create_ahmBitmap(myBmp->Width, myBmp->Height);
 	skinMap=create_ahmBitmap(myBmp->Width,myBmp->Height);
 	uChannel=create_ahmBitmap(myBmp->Width,myBmp->Height);
 	experimentalskin=create_ahmBitmap(myBmp->Width,myBmp->Height);
 	filtered=create_ahmBitmap(myBmp->Width,myBmp->Height);
 
+	/* start processing */
 	create_ycbcr(myBmp, ycbcr);
-	ycbcr_to_rgb(ycbcr,myBmp);
+	create_ycbcr_channels(myBmp, ycbcr_y, ycbcr_cb, ycbcr_cr);
+	//ycbcr_to_rgb(ycbcr,myBmp); // testing
 	create_lux(myBmp, lux);
-
+	create_lux_channels(myBmp, lux_l, lux_u, lux_x);
 	bilateralFilter(ycbcr, filtered, 9,20,70);
 
 	for(i=0; i < myBmp->Width; ++i)
@@ -74,9 +91,7 @@ void main_process_image(char *file_path)
 			set_pixel(myBmp, i, j, p.r_, p.g_, p.b_);
 		}
 	}
-
 	create_skin_map(myBmp, ycbcr, lux, skinMap, uChannel, experimentalskin);
-
 
 	for(i=0; i < myBmp->Width; ++i)
 	{
@@ -103,17 +118,45 @@ void main_process_image(char *file_path)
 	}
 	ycbcr_to_rgb(ycbcr,myBmp);
 
-	sprintf(file_output_name, "%s_output.bmp\0", file_path);
+	sprintf(file_output_name, "%s_output.bmp\0", input_file_name);
+	save_bmp(myBmp, file_output_name);
 
-	//save_bmp(ycbcr,"YCbCr.bmp");
-	//save_bmp(lux,"LUX.bmp");
-	//save_bmp(skinMap,"skinMap.bmp");
-	save_bmp(myBmp,file_output_name);
+	sprintf(file_output_name, "%s_YCbCr.bmp\0", input_file_name);
+	save_bmp(ycbcr, file_output_name);
+
+	sprintf(file_output_name, "%s_Y_(YCbCr).bmp\0", input_file_name);
+	save_bmp(ycbcr_y, file_output_name);
+	sprintf(file_output_name, "%s_Cb_(YCbCr).bmp\0", input_file_name);
+	save_bmp(ycbcr_cb, file_output_name);
+	sprintf(file_output_name, "%s_Cr_(YCbCr).bmp\0", input_file_name);
+	save_bmp(ycbcr_cr, file_output_name);
+
+	sprintf(file_output_name, "%s_LUX.bmp\0", input_file_name);
+	save_bmp(lux, file_output_name);
+
+	sprintf(file_output_name, "%s_L_(LUX).bmp\0", input_file_name);
+	save_bmp(lux_l, file_output_name);
+	sprintf(file_output_name, "%s_U_(LUX).bmp\0", input_file_name);
+	save_bmp(lux_u, file_output_name);
+	sprintf(file_output_name, "%s_X_(LUX).bmp\0", input_file_name);
+	save_bmp(lux_x, file_output_name);
+
+	sprintf(file_output_name, "%s_Pele.bmp\0", input_file_name);
+	save_bmp(skinMap, file_output_name);
+	
 	//save_bmp(experimentalskin,"exp.bmp");
-	//save_bmp(filtered,"bilateral filtered.bmp");
 
-	destroy_ahmBitmap(ycbcr);
+	sprintf(file_output_name, "%s_Filtro.bmp\0", input_file_name);
+	save_bmp(filtered, file_output_name);
+
 	destroy_ahmBitmap(lux);
+	destroy_ahmBitmap(lux_l);
+	destroy_ahmBitmap(lux_u);
+	destroy_ahmBitmap(lux_x);
+	destroy_ahmBitmap(ycbcr);
+	destroy_ahmBitmap(ycbcr_y);
+	destroy_ahmBitmap(ycbcr_cb);
+	destroy_ahmBitmap(ycbcr_cr);
 	destroy_ahmBitmap(skinMap);
 	destroy_ahmBitmap(uChannel);
 	destroy_ahmBitmap(myBmp);
@@ -147,10 +190,10 @@ int main(int argc, char *argv[])
 #endif
 	return 0;
 }
-
+/*
 #if defined(_WIN32)
 int APIENTRY _WinMain(HINSTANCE hInstance, HINSTANCE hPevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	return main( __argc, __argv);
 }
-#endif
+#endif*/

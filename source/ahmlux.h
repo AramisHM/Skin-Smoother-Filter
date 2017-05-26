@@ -16,6 +16,12 @@ extern "C" {
 /* extractes the L U and X from a given RGB image */
 void create_lux(ahm_bitmap *rgb_bmp,
 				ahm_bitmap *lux_bmp);
+
+/* extractes the L U and X from a given RGB image and store each channel into an individual RGB image */
+void create_lux_channels(ahm_bitmap *rgb_bmp,
+	ahm_bitmap *l_bmp,
+	ahm_bitmap *u_bmp,
+	ahm_bitmap *x_bmp);
 #endif
 
 #ifdef __cplusplus
