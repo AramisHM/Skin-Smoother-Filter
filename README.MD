@@ -4,6 +4,6 @@ A C program to remove details/texture from the skin. It uses the LUX, CbCr color
 ## Usage
 Call the program with the 24bit .BMP file as argument.
 
-![alt tag](https://github.com/AramisHM/Skin-Smoother-Filter/blob/master/doc/demo.jpg)
+![alt tag](https://github.com/AramisHM/Skin-Smoother-Filter/blob/master/doc/diagram.png)
 
 Photo credits: JerzyGorecki
